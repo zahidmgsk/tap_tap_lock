@@ -1,6 +1,7 @@
 package com.taplock.myapplication
 
 import android.accessibilityservice.AccessibilityServiceInfo
+import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -62,12 +63,13 @@ class MainActivity : ComponentActivity() {
                         onThemeChange = { newColor ->
                             currentThemeColor = newColor
                             prefs.edit().putInt("app_theme_color", newColor.toArgb()).apply()
+                            updateAllWidgets(context)
                         },
                         onModeChange = { newMode ->
                             themeMode = newMode
                             prefs.edit().putString("theme_mode", newMode).apply()
                         },
-                        onToggleClick = { openAccessibilitySettings() },
+                        onToggleClick = { toggleAccessibilityService() },
                         onTestClick = { testLock() }
                     )
                 }
@@ -80,14 +82,28 @@ class MainActivity : ComponentActivity() {
         isServiceEnabled = isAccessibilityServiceEnabled(this, LockAccessibilityService::class.java)
     }
 
-    private fun openAccessibilitySettings() {
-        try {
-            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(intent)
-            android.widget.Toast.makeText(this, "Find 'tap tap lock' and toggle it", android.widget.Toast.LENGTH_LONG).show()
-        } catch (e: Exception) {
-            startActivity(Intent(Settings.ACTION_SETTINGS))
+    private fun toggleAccessibilityService() {
+        if (isServiceEnabled) {
+            // Service is enabled, disable it directly with one tap
+            val intent = Intent(this, LockAccessibilityService::class.java).apply {
+                action = LockAccessibilityService.ACTION_DISABLE
+            }
+            startService(intent)
+            android.widget.Toast.makeText(this, "❌ Accessibility Disabled", android.widget.Toast.LENGTH_SHORT).show()
+            // The service will call disableSelf(), we update UI after a tiny delay
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                isServiceEnabled = isAccessibilityServiceEnabled(this, LockAccessibilityService::class.java)
+            }, 500)
+        } else {
+            // Service is disabled, must go to settings to enable (Android security requirement)
+            try {
+                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
+                android.widget.Toast.makeText(this, "Find 'tap tap lock' and toggle it ON", android.widget.Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                startActivity(Intent(Settings.ACTION_SETTINGS))
+            }
         }
     }
 
@@ -108,6 +124,28 @@ class MainActivity : ComponentActivity() {
             }
         }
         return false
+    }
+
+    private fun updateAllWidgets(context: Context) {
+        val widgetClasses = listOf(
+            LockWidget::class.java,
+            LockWidgetMin::class.java,
+            LockWidgetText::class.java,
+            LockWidgetTile::class.java,
+            NothingWidget::class.java,
+            DisableWidget::class.java,
+            CombinedWidget::class.java,
+            CombinedWidgetVertical::class.java
+        )
+        for (widgetClass in widgetClasses) {
+            val intent = Intent(context, widgetClass).apply {
+                action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+            }
+            val ids = AppWidgetManager.getInstance(context)
+                .getAppWidgetIds(ComponentName(context, widgetClass))
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+            context.sendBroadcast(intent)
+        }
     }
 }
 

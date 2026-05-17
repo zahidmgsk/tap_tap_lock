@@ -8,7 +8,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.widget.RemoteViews
 
-class LockWidgetText : AppWidgetProvider() {
+class NothingWidget : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         for (appWidgetId in appWidgetIds) {
@@ -20,12 +20,10 @@ class LockWidgetText : AppWidgetProvider() {
         private const val ACTION_WIDGET_TAP = "com.taplock.myapplication.WIDGET_TAP"
 
         internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
-            val views = RemoteViews(context.packageName, R.layout.lock_widget_text_layout)
+            val views = RemoteViews(context.packageName, R.layout.nothing_widget_layout)
             
-            val prefs = context.getSharedPreferences("LockSettings", Context.MODE_PRIVATE)
-            val themeColor = prefs.getInt("app_theme_color", Color.parseColor("#6750A4"))
-            
-            views.setInt(R.id.widget_background, "setColorFilter", themeColor)
+            // Nothing Phone style is typically black
+            views.setInt(R.id.widget_background, "setColorFilter", Color.BLACK)
             
             val intent = Intent(context, LockWidget::class.java).apply {
                 action = ACTION_WIDGET_TAP
@@ -33,7 +31,7 @@ class LockWidgetText : AppWidgetProvider() {
             
             val pendingIntent = PendingIntent.getBroadcast(
                 context,
-                appWidgetId + 2000,
+                appWidgetId + 4000,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )

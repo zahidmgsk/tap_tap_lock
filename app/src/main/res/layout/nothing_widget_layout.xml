@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center">
+
+    <!-- Nothing black circle -->
+    <ImageView
+        android:id="@+id/widget_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:src="@drawable/widget_shape_circle"
+        android:contentDescription="@null" />
+
+    <!-- Minimalist white dot or lock icon -->
+    <ImageView
+        android:id="@+id/widget_icon"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="22dp"
+        android:scaleType="fitCenter"
+        android:src="@android:drawable/ic_lock_idle_lock"
+        android:tint="@android:color/white"
+        android:contentDescription="@string/app_name" />
+
+    <!-- Nothing signature red dot -->
+    <ImageView
+        android:layout_width="6dp"
+        android:layout_height="6dp"
+        android:layout_alignBottom="@id/widget_icon"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="14dp"
+        android:src="@drawable/nothing_red_dot"
+        android:contentDescription="@null" />
+
+</RelativeLayout>

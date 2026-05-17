@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.widget.RemoteViews
 
 class LockWidget : AppWidgetProvider() {
@@ -30,7 +31,7 @@ class LockWidget : AppWidgetProvider() {
             val lastTapTime = prefs.getLong("last_tap_time", 0L)
             val currentTime = System.currentTimeMillis()
             
-            if (currentTime - lastTapTime < 500) { // 500ms for double tap
+            if (currentTime - lastTapTime < 500) {
                 prefs.edit().putLong("last_tap_time", 0L).apply()
                 launchLockActivity(context)
             } else {
@@ -49,10 +50,16 @@ class LockWidget : AppWidgetProvider() {
     }
 
     companion object {
-        private const val ACTION_WIDGET_TAP = "com.taplock.myapplication.WIDGET_TAP"
+        const val ACTION_WIDGET_TAP = "com.taplock.myapplication.WIDGET_TAP"
 
         internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
             val views = RemoteViews(context.packageName, R.layout.lock_widget_layout)
+            
+            val prefs = context.getSharedPreferences("LockSettings", Context.MODE_PRIVATE)
+            val themeColor = prefs.getInt("app_theme_color", Color.parseColor("#6750A4"))
+            
+            // Correctly tint the background image
+            views.setInt(R.id.widget_background, "setColorFilter", themeColor)
             
             val intent = Intent(context, LockWidget::class.java).apply {
                 action = ACTION_WIDGET_TAP
@@ -65,7 +72,7 @@ class LockWidget : AppWidgetProvider() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            views.setOnClickPendingIntent(R.id.lock_image, pendingIntent)
+            views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
     }
