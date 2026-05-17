@@ -1,13 +1,11 @@
 package com.taplock.myapplication
 
-import android.accessibilityservice.AccessibilityServiceInfo
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
-import android.view.accessibility.AccessibilityManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -38,6 +36,7 @@ import com.taplock.myapplication.ui.theme.MyApplicationTheme
 class MainActivity : ComponentActivity() {
     
     private var isServiceEnabled by mutableStateOf(false)
+    private var showDisclosure by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,9 +68,41 @@ class MainActivity : ComponentActivity() {
                             themeMode = newMode
                             prefs.edit().putString("theme_mode", newMode).apply()
                         },
-                        onToggleClick = { toggleAccessibilityService() },
+                        onToggleClick = { 
+                            if (!isServiceEnabled) {
+                                showDisclosure = true 
+                            } else {
+                                toggleAccessibilityService()
+                            }
+                        },
                         onTestClick = { testLock() }
                     )
+
+                    if (showDisclosure) {
+                        AlertDialog(
+                            onDismissRequest = { showDisclosure = false },
+                            title = { Text("Accessibility Permission") },
+                            text = { 
+                                Text("This app requires Accessibility Service permission to perform the 'Screen Lock' action. \n\n" +
+                                     "• This is used ONLY to lock the screen.\n" +
+                                     "• No personal data is collected.\n\n" +
+                                     "⚠️ NOTE: If the setting is 'Restricted' (greyed out), go to Phone Settings > Apps > tap tap lock > tap 3 dots (⋮) > 'Allow restricted settings'.")
+                            },
+                            confirmButton = {
+                                Button(onClick = {
+                                    showDisclosure = false
+                                    toggleAccessibilityService()
+                                }) {
+                                    Text("Continue to Settings")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showDisclosure = false }) {
+                                    Text("Cancel")
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -115,15 +146,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun isAccessibilityServiceEnabled(context: Context, service: Class<*>): Boolean {
-        val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-        val enabledServices = am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_GENERIC)
-        for (info in enabledServices) {
-            if (info.resolveInfo.serviceInfo.packageName == context.packageName &&
-                info.resolveInfo.serviceInfo.name == service.name) {
-                return true
-            }
-        }
-        return false
+        val expectedComponentName = ComponentName(context, service).flattenToString()
+        val enabledServices = Settings.Secure.getString(
+            context.contentResolver,
+            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        )
+        return enabledServices?.contains(expectedComponentName) == true
     }
 
     private fun updateAllWidgets(context: Context) {
@@ -483,12 +511,13 @@ fun HelpCard(isDoubleTap: Boolean) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
-            Text("Usage Guide", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+            Text("Usage Guide & Privacy", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(8.dp))
             Text(
                 "1. Enable the service using the button above.\n" +
                 "2. Add the 'tap tap lock' widget to your home screen.\n" +
-                "3. ${if (isDoubleTap) "Double tap" else "Single tap"} the widget to lock instantly.",
+                "3. ${if (isDoubleTap) "Double tap" else "Single tap"} the widget to lock instantly.\n\n" +
+                "🔒 Privacy: This app is offline and does not collect any data. Accessibility is used only to trigger the system lock.",
                 style = MaterialTheme.typography.bodySmall,
                 lineHeight = 18.sp
             )

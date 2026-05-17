@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">tap tap lock</string>
+    <string name="accessibility_description">This service is used strictly to perform the screen lock action when you tap the widget. It does not collect or observe any user data.</string>
 </resources>
