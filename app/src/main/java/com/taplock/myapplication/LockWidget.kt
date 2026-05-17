@@ -57,9 +57,12 @@ class LockWidget : AppWidgetProvider() {
             
             val prefs = context.getSharedPreferences("LockSettings", Context.MODE_PRIVATE)
             val themeColor = prefs.getInt("app_theme_color", Color.parseColor("#6750A4"))
+            val transparency = prefs.getInt("widget_transparency", 255)
             
-            // Correctly tint the background image
+            // Set Color Filter (Full Color)
             views.setInt(R.id.widget_background, "setColorFilter", themeColor)
+            // Set Alpha (Actual Transparency)
+            views.setInt(R.id.widget_background, "setImageAlpha", transparency)
             
             val intent = Intent(context, LockWidget::class.java).apply {
                 action = ACTION_WIDGET_TAP

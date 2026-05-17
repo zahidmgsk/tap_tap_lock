@@ -3,6 +3,7 @@
     android:layout_width="120dp"
     android:layout_height="60dp"
     android:orientation="horizontal"
+    android:baselineAligned="false"
     android:padding="2dp">
 
     <!-- Lock Preview -->
@@ -26,7 +27,7 @@
             android:tint="@android:color/white" />
     </FrameLayout>
 
-    <!-- Disable Preview -->
+    <!-- Disable Preview (Happy Face - Default state) -->
     <FrameLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
@@ -37,13 +38,13 @@
             android:layout_height="match_parent"
             android:scaleType="fitXY"
             android:src="@drawable/widget_shape_tile"
-            android:tint="#F44336" />
+            android:tint="#4CAF50" />
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:padding="12dp"
             android:scaleType="fitCenter"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:src="@drawable/ic_face_happy"
             android:tint="@android:color/white" />
     </FrameLayout>
 </LinearLayout>

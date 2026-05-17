@@ -22,10 +22,19 @@ class DisableWidget : AppWidgetProvider() {
         internal fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
             val views = RemoteViews(context.packageName, R.layout.widget_disable_layout)
             
-            // Dynamic Color
+            val prefs = context.getSharedPreferences("LockSettings", Context.MODE_PRIVATE)
+            val transparency = prefs.getInt("widget_transparency", 255)
+
+            // Dynamic Dotted Face Color and Icon (Enabled -> Red/Happy, Disabled -> Green/Sad)
             val isEnabled = isAccessibilityServiceEnabled(context)
-            val crossColor = if (isEnabled) Color.parseColor("#4CAF50") else Color.parseColor("#F44336")
-            views.setInt(R.id.widget_background, "setColorFilter", crossColor)
+            
+            val crossBaseColor = if (isEnabled) Color.parseColor("#F44336") else Color.parseColor("#4CAF50")
+            views.setInt(R.id.widget_background, "setColorFilter", crossBaseColor)
+            views.setInt(R.id.widget_background, "setImageAlpha", transparency)
+            
+            // DOTTED SMILEY
+            val iconRes = if (isEnabled) R.drawable.ic_face_happy_dotted else R.drawable.ic_face_sad_dotted
+            views.setImageViewResource(R.id.status_icon, iconRes)
 
             val intent = Intent(context, DisableActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)

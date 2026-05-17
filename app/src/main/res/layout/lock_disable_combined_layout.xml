@@ -3,7 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- The Main Container -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -11,14 +10,12 @@
         android:baselineAligned="false"
         android:padding="2dp">
 
-        <!-- Lock Section -->
         <RelativeLayout
             android:id="@+id/btn_lock"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_margin="4dp">
-
             <ImageView
                 android:id="@+id/lock_bg"
                 android:layout_width="match_parent"
@@ -26,7 +23,6 @@
                 android:scaleType="fitXY"
                 android:src="@drawable/widget_shape_tile"
                 android:contentDescription="@null" />
-
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -37,33 +33,28 @@
                 android:contentDescription="Lock Screen" />
         </RelativeLayout>
 
-        <!-- Disable Section (Always Red for contrast/danger) -->
         <RelativeLayout
             android:id="@+id/btn_disable"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_margin="4dp">
-
             <ImageView
                 android:id="@+id/disable_bg"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="fitXY"
                 android:src="@drawable/widget_shape_tile"
-                android:tint="#F44336"
                 android:contentDescription="@null" />
-
             <ImageView
+                android:id="@+id/status_icon"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:padding="12dp"
                 android:scaleType="fitCenter"
-                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:src="@drawable/ic_face_happy"
                 android:tint="@android:color/white"
-                android:contentDescription="Disable Service" />
+                android:contentDescription="Status Icon" />
         </RelativeLayout>
-
     </LinearLayout>
-
 </RelativeLayout>

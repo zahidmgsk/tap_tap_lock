@@ -49,6 +49,7 @@ class MainActivity : ComponentActivity() {
                 mutableStateOf(Color(savedColor))
             }
             var themeMode by remember { mutableStateOf(prefs.getString("theme_mode", "System") ?: "System") }
+            var transparency by remember { mutableStateOf(prefs.getInt("widget_transparency", 255)) }
 
             MyApplicationTheme(seedColor = currentThemeColor, themeMode = themeMode) {
                 Surface(
@@ -59,6 +60,7 @@ class MainActivity : ComponentActivity() {
                         isEnabled = isServiceEnabled,
                         currentThemeColor = currentThemeColor,
                         themeMode = themeMode,
+                        transparency = transparency,
                         onThemeChange = { newColor ->
                             currentThemeColor = newColor
                             prefs.edit().putInt("app_theme_color", newColor.toArgb()).apply()
@@ -67,6 +69,11 @@ class MainActivity : ComponentActivity() {
                         onModeChange = { newMode ->
                             themeMode = newMode
                             prefs.edit().putString("theme_mode", newMode).apply()
+                        },
+                        onTransparencyChange = { newTransparency ->
+                            transparency = newTransparency
+                            prefs.edit().putInt("widget_transparency", newTransparency).apply()
+                            updateAllWidgets(context)
                         },
                         onToggleClick = { 
                             if (!isServiceEnabled) {
@@ -183,8 +190,10 @@ fun Dashboard(
     isEnabled: Boolean,
     currentThemeColor: Color,
     themeMode: String,
+    transparency: Int,
     onThemeChange: (Color) -> Unit,
     onModeChange: (String) -> Unit,
+    onTransparencyChange: (Int) -> Unit,
     onToggleClick: () -> Unit,
     onTestClick: () -> Unit
 ) {
@@ -193,7 +202,9 @@ fun Dashboard(
     var isDoubleTap by remember { mutableStateOf(prefs.getBoolean("double_tap_enabled", false)) }
     val scrollState = rememberScrollState()
     var showThemeSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState()
+    var showAboutSheet by remember { mutableStateOf(false) }
+    val themeSheetState = rememberModalBottomSheetState()
+    val aboutSheetState = rememberModalBottomSheetState()
 
     Scaffold(
         topBar = {
@@ -250,16 +261,32 @@ fun Dashboard(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showThemeSheet = true },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = CircleShape
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Box(modifier = Modifier.size(24.dp)) {
-                    Box(modifier = Modifier.size(10.dp).align(Alignment.TopStart).background(Color.Red, CircleShape))
-                    Box(modifier = Modifier.size(10.dp).align(Alignment.TopEnd).background(Color.Green, CircleShape))
-                    Box(modifier = Modifier.size(10.dp).align(Alignment.BottomCenter).background(Color.Blue, CircleShape))
+                // About Button
+                SmallFloatingActionButton(
+                    onClick = { showAboutSheet = true },
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    shape = CircleShape
+                ) {
+                    Text("?", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                }
+
+                // Theme Button
+                FloatingActionButton(
+                    onClick = { showThemeSheet = true },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = CircleShape
+                ) {
+                    Box(modifier = Modifier.size(24.dp)) {
+                        Box(modifier = Modifier.size(10.dp).align(Alignment.TopStart).background(Color.Red, CircleShape))
+                        Box(modifier = Modifier.size(10.dp).align(Alignment.TopEnd).background(Color.Green, CircleShape))
+                        Box(modifier = Modifier.size(10.dp).align(Alignment.BottomCenter).background(Color.Blue, CircleShape))
+                    }
                 }
             }
         }
@@ -290,15 +317,15 @@ fun Dashboard(
 
             // Help Section
             HelpCard(isDoubleTap)
-            
+
             // Padding to avoid FAB overlap
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(100.dp))
         }
 
         if (showThemeSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showThemeSheet = false },
-                sheetState = sheetState,
+                sheetState = themeSheetState,
                 containerColor = MaterialTheme.colorScheme.surface,
                 dragHandle = { BottomSheetDefaults.DragHandle() }
             ) {
@@ -306,9 +333,106 @@ fun Dashboard(
                     currentSelectedColor = currentThemeColor,
                     onColorSelected = { onThemeChange(it) },
                     themeMode = themeMode,
-                    onModeChange = onModeChange
+                    onModeChange = onModeChange,
+                    transparency = transparency,
+                    onTransparencyChange = onTransparencyChange
                 )
             }
+        }
+
+        if (showAboutSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showAboutSheet = false },
+                sheetState = aboutSheetState,
+                containerColor = MaterialTheme.colorScheme.surface,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
+            ) {
+                AboutSheetContent()
+            }
+        }
+    }
+}
+
+@Composable
+fun AboutSheetContent() {
+    var showDonateDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val version = remember {
+        try {
+            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            pInfo.versionName
+        } catch (e: Exception) {
+            "1.0.0"
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 48.dp, top = 16.dp, start = 24.dp, end = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        Text(
+            "About tap tap lock",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                "Developed by Zahid Choudhry",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                "Version $version",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Text(
+            "A lightweight utility to lock your screen with a simple tap while keeping biometrics active. No data collection, fully offline.",
+            style = MaterialTheme.typography.bodyMedium,
+            lineHeight = 20.sp,
+            modifier = Modifier.padding(horizontal = 8.dp)
+        )
+
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+        Text("Support & Donate", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleSmall)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
+        ) {
+            SupportButton(
+                name = "Payoneer",
+                color = Color(0xFFFF9800),
+                onClick = { showDonateDialog = true }
+            )
+
+            SupportButton(
+                name = "JazzCash",
+                color = Color(0xFFFFCC00),
+                textColor = Color.Black,
+                onClick = { showDonateDialog = true }
+            )
+        }
+
+        if (showDonateDialog) {
+            AlertDialog(
+                onDismissRequest = { showDonateDialog = false },
+                title = { Text("Donate & Support") },
+                text = { Text("Thank you for your support! Details for Payoneer and JazzCash will be added in a future update.") },
+                confirmButton = {
+                    TextButton(onClick = { showDonateDialog = false }) {
+                        Text("Close")
+                    }
+                }
+            )
         }
     }
 }
@@ -318,7 +442,9 @@ fun ThemeSettingsContent(
     currentSelectedColor: Color,
     onColorSelected: (Color) -> Unit,
     themeMode: String,
-    onModeChange: (String) -> Unit
+    onModeChange: (String) -> Unit,
+    transparency: Int,
+    onTransparencyChange: (Int) -> Unit
 ) {
     val colors = listOf(
         Color(0xFF6750A4), Color(0xFFF44336), Color(0xFFE91E63), Color(0xFF9C27B0),
@@ -353,6 +479,24 @@ fun ThemeSettingsContent(
                 ModeOption("Dark", themeMode == "Dark") { onModeChange("Dark") }
                 ModeOption("System", themeMode == "System") { onModeChange("System") }
             }
+        }
+
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+        // Widget Transparency
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Widget Transparency", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+            Slider(
+                value = transparency.toFloat(),
+                onValueChange = { onTransparencyChange(it.toInt()) },
+                valueRange = 0f..255f,
+                steps = 25
+            )
+            Text(
+                text = "${(transparency / 255f * 100).toInt()}% Opacity",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.align(Alignment.End)
+            )
         }
 
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -520,6 +664,30 @@ fun HelpCard(isDoubleTap: Boolean) {
                 "🔒 Privacy: This app is offline and does not collect any data. Accessibility is used only to trigger the system lock.",
                 style = MaterialTheme.typography.bodySmall,
                 lineHeight = 18.sp
+            )
+        }
+    }
+}
+
+@Composable
+fun SupportButton(
+    name: String,
+    color: Color,
+    textColor: Color = Color.White,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        color = color,
+        modifier = Modifier.height(48.dp).width(120.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text = name,
+                color = textColor,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold
             )
         }
     }

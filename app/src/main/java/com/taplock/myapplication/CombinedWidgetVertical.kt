@@ -24,15 +24,23 @@ class CombinedWidgetVertical : AppWidgetProvider() {
             
             val prefs = context.getSharedPreferences("LockSettings", Context.MODE_PRIVATE)
             val themeColor = prefs.getInt("app_theme_color", Color.parseColor("#6750A4"))
+            val transparency = prefs.getInt("widget_transparency", 255)
             
             views.setInt(R.id.lock_bg, "setColorFilter", themeColor)
+            views.setInt(R.id.lock_bg, "setImageAlpha", transparency)
 
-            // Dynamic Cross Color based on status
+            // Dynamic Dotted Face Color and Icon based on status
             val isEnabled = isAccessibilityServiceEnabled(context)
-            val crossColor = if (isEnabled) Color.parseColor("#4CAF50") else Color.parseColor("#F44336")
-            views.setInt(R.id.disable_bg, "setColorFilter", crossColor)
+            
+            val crossBaseColor = if (isEnabled) Color.parseColor("#F44336") else Color.parseColor("#4CAF50")
+            views.setInt(R.id.disable_bg, "setColorFilter", crossBaseColor)
+            views.setInt(R.id.disable_bg, "setImageAlpha", transparency)
+            
+            // DOTTED SMILEY
+            val iconRes = if (isEnabled) R.drawable.ic_face_happy_dotted else R.drawable.ic_face_sad_dotted
+            views.setImageViewResource(R.id.status_icon, iconRes)
 
-            // Lock Action (Bottom) - Use Broadcast to LockWidget for Double Tap logic support
+            // Lock Action (Bottom)
             val lockIntent = Intent(context, LockWidget::class.java).apply {
                 action = "com.taplock.myapplication.WIDGET_TAP"
             }
@@ -42,7 +50,7 @@ class CombinedWidgetVertical : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.btn_lock, lockPendingIntent)
 
-            // Disable Action (Top) - Launches DisableActivity for immediate toast and action
+            // Disable Action (Top)
             val disableIntent = Intent(context, DisableActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
             }

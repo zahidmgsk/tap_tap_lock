@@ -15,12 +15,13 @@
         android:contentDescription="@null" />
 
     <ImageView
+        android:id="@+id/status_icon"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="20dp"
         android:scaleType="fitCenter"
-        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:src="@drawable/ic_face_happy"
         android:tint="@android:color/white"
-        android:contentDescription="Disable Service" />
+        android:contentDescription="Status Icon" />
 
 </RelativeLayout>
