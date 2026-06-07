@@ -90,24 +90,41 @@ class MainActivity : ComponentActivity() {
                             onDismissRequest = { showDisclosure = false },
                             title = { Text("Accessibility Permission") },
                             text = { 
-                                Text("This app requires Accessibility Service permission to perform the 'Screen Lock' action. \n\n" +
-                                     "• This is used ONLY to lock the screen.\n" +
-                                     "• No personal data is collected.\n\n" +
-                                     "⚠️ NOTE: If the setting is 'Restricted' (greyed out), go to Phone Settings > Apps > tap tap lock > tap 3 dots (⋮) > 'Allow restricted settings'.")
+                                Text("This app requires Accessibility Service permission to perform the 'Screen Lock' system action. \n\n" +
+                                     "• Usage: This permission is used strictly to trigger the system screen lock when you tap the widget.\n" +
+                                     "• Privacy: This service is 'blind'. It does NOT read your screen, track your input, or collect any personal data.\n" +
+                                     "• Data Sharing: No data is collected or shared with third parties.\n\n" +
+                                     "⚠️ NOTE: If the toggle is 'Restricted' (greyed out), go to: \nPhone Settings > Apps > tap tap lock > tap 3 dots (⋮) > 'Allow restricted settings'.")
                             },
                             confirmButton = {
-                                Button(onClick = {
-                                    showDisclosure = false
-                                    toggleAccessibilityService()
-                                }) {
-                                    Text("Continue to Settings")
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Button(
+                                        onClick = {
+                                            showDisclosure = false
+                                            toggleAccessibilityService()
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("1. Go to Accessibility Settings")
+                                    }
+                                    Spacer(Modifier.height(8.dp))
+                                    OutlinedButton(
+                                        onClick = {
+                                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                                data = android.net.Uri.fromParts("package", packageName, null)
+                                            }
+                                            startActivity(intent)
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("2. Open App Info (If Restricted)")
+                                    }
+                                    TextButton(onClick = { showDisclosure = false }) {
+                                        Text("Cancel")
+                                    }
                                 }
                             },
-                            dismissButton = {
-                                TextButton(onClick = { showDisclosure = false }) {
-                                    Text("Cancel")
-                                }
-                            }
+                            dismissButton = {}
                         )
                     }
                 }
